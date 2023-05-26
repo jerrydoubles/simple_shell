@@ -8,7 +8,7 @@
  *
  * Return: 0 on success
  */
-int main()
+int main(void)
 {
 	int number_of_items; /* The number of items purchased. */
 	float price_per_item; /* The price of each item. */
@@ -24,5 +24,5 @@ int main()
 
 	printf("The total cost is %.2f\n", total_cost);
 
-	return 0;
+	return (0);
 }

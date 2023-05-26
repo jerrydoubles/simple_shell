@@ -5,10 +5,10 @@
  * @line: line read
  */
 
-void expand_variables(char *line)
+void expand_variables(char *line __attribute__((unused)))
 {
 	char *args[100];
-	int num_args = split_commands(line, args);
+	int num_args = 3;
 	int i;
 
 	for (i = 0; i < num_args; i++)

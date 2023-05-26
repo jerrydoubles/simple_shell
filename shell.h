@@ -9,4 +9,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+void split_commands(char *line, char **commands);
+
 #endif

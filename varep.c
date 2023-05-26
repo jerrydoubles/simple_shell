@@ -9,8 +9,9 @@ void expand_variables(char *line)
 {
 	char *args[100];
 	int num_args = split_commands(line, args);
+	int i;
 
-	for (int i = 0; i < num_args; i++)
+	for (i = 0; i < num_args; i++)
 	{
 		if (args[i][0] == '$')
 		{

@@ -15,8 +15,8 @@ int executeCommand(char *command)
 
 	if (child_pid == -1)
 	{
-	perror("Error occurred while forking\n");
-	return (-1);
+		perror("Error occurred while forking\n");
+		return (-1);
 	}
 	else if (child_pid == 0)
 	{
@@ -31,6 +31,7 @@ int executeCommand(char *command)
 		return (WEXITSTATUS(status));
 	}
 }
+
 /**
  * execvpWrapper - Calls execvp with the command and handles memory allocation.
  *
@@ -65,6 +66,7 @@ void execvpWrapper(char *command)
 	perror("Error occurred while executing command\n");
 	exit(1);
 }
+
 /**
  * main - Entry point of the application.
  *
@@ -79,35 +81,32 @@ int main(void)
 
 	while (1)
 	{
-	printf("(jeshell$) ");
-	nread = getline(&lineptr, &n, stdin);
+		printf("(jeshell$) ");
+		nread = getline(&lineptr, &n, stdin);
 
-	if (nread == -1)
-	{
-		free(lineptr);
-		free(copied_lineptr);
-		printf("Closing shell...\n");
-	return (-1);
+		if (nread == -1)
+		{
+			free(lineptr);
+			free(copied_lineptr);
+			printf("Closing shell...\n");
+			return (-1);
+		}
+		copied_lineptr = malloc((n + 1) * sizeof(char));
+		if (copied_lineptr == NULL)
+		{
+			free(copied_lineptr);
+			free(lineptr);
+			perror("Error occurred while running malloc\n");
+			return (-1);
+		}
+		strcpy(copied_lineptr, lineptr);
+		copied_lineptr[n] = '\0';
+		printf(">>debug<<: %s\n", copied_lineptr);
+		exit_status = executeCommand(copied_lineptr);
+
+		printf("The exit status of the last command was %d.\n", exit_status);
+		printf("The process ID of this shell is %d.\n", getpid());
 	}
-
-	copied_lineptr = malloc((n + 1) * sizeof(char));
-	if (copied_lineptr == NULL)
-	{
-		free(copied_lineptr);
-		free(lineptr);
-		perror("Error occurred while running malloc\n");
-		return (-1);
-	}
-	strcpy(copied_lineptr, lineptr);
-	copied_lineptr[n] = '\0';
-	printf(">>debug<<: %s\n", copied_lineptr);
-
-	exit_status = executeCommand(copied_lineptr);
-
-	printf("The exit status of the last command was %d.\n", exit_status);
-	printf("The process ID of this shell is %d.\n", getpid());
-	}
-
 	free(lineptr);
 	free(copied_lineptr);
 

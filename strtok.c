@@ -58,88 +58,95 @@ ssize_t my_getline(char **lineptr)
  *
  * Return: Always 0. Otherwise -1 on error.
  */
-int main(void) {
-  char *line = NULL;
-  size_t nread;
+int main(void)
+{
+	char *line = NULL;
+	size_t nread;
 
-  while (1) {
-    printf("(jeshell$) ");
+	while (1)
+	{
+		printf("(jeshell$) ");
 
-    nread = my_getline(&line);
+		nread = my_getline(&line);
+	       	if (nread == -1)
+		{
+			printf("Closing shell...\n");
+			return (-1);
+		}
 
-    if (nread == -1) {
-      printf("Closing shell...\n");
-      return (-1);
-    }
+		/* Split the command line into arguments. */
+		char *args[100];
+		int argc = 0;
 
-    // Split the command line into arguments.
-    char *args[100];
-    int argc = 0;
+		for (size_t i = 0; i < nread; i++)
+		{
+			if (line[i] == ' ')
+			{
+				args[argc++] = line + i + 1;
+				line[i] = '\0';
+			}
+		}		
+		args[argc++] = line;
 
-    for (size_t i = 0; i < nread; i++) {
-      if (line[i] == ' ') {
-        args[argc++] = line + i + 1;
-        line[i] = '\0';
-      }
-    }
-
-    args[argc++] = line;
-
-    // Check if the command exists in the PATH.
-    char *path = getenv("PATH");
-    if (path == NULL) {
-      perror("Error getting PATH environment variable\n");
-      free(line);
-      return (-1);
-    }
-
-    char *full_path = malloc(strlen(path) + strlen(args[0]) + 2);
-    if (full_path == NULL) {
-      perror("Error allocating memory for full path\n");
-      free(line);
-      return (-1);
-    }
-
-    sprintf(full_path, "%s/%s", path, args[0]);
-
-    // Check if the command exists in the full path.
-    int exists = access(full_path, F_OK);
-    if (exists == -1) {
-      perror("Command does not exist\n");
-      free(line);
-      free(full_path);
-      return (-1);
-    }
-
-    // Execute the command.
-    if (strcmp(args[0], "exit") == 0) {
-      free(line);
-      free(full_path);
-      exit(0);
-    } else if (strcmp(args[0], "env") == 0) {
-      free(line);
-      free(full_path);
-      char **envp = environ;
-      while (*envp != NULL) {
-        printf("%s=%s\n", *envp, *(envp + 1));
-        envp += 2;
-      }
-      return (0);
-    } else {
-      int pid = fork();
-      if (pid == 0) {
-        execvp(full_path, args);
-        perror("Error executing command\n");
-        exit(1);
-      } else {
-        wait(NULL);
-      }
-    }
-
-    free(line);
-    free(full_path);
-  }
-
-  return (0);
+		/* Check if the command exists in the PATH. */
+		char *path = getenv("PATH");
+		if (path == NULL)
+		{
+			perror("Error getting PATH environment variable\n");
+			free(line);
+			return (-1);
+		}
+		char *full_path = malloc(strlen(path) + strlen(args[0]) + 2);
+		if (full_path == NULL)
+		{
+			perror("Error allocating memory for full path\n");
+			free(line);
+			return (-1);
+		}
+		sprintf(full_path, "%s/%s", path, args[0]);
+		
+		/* Check if the command exists in the full path. */
+		int exists = access(full_path, F_OK);
+		if (exists == -1)
+		{
+			perror("Command does not exist\n");
+			free(line);
+			free(full_path);
+			return (-1);
+		}
+		/* Execute the command. */
+		if (strcmp(args[0], "exit") == 0)
+		{
+			free(line);
+			free(full_path);
+			exit(0);
+		}
+		else if (strcmp(args[0], "env") == 0)
+		{
+			free(line);
+			free(full_path);
+			char **envp = environ;
+			while (*envp != NULL)
+			{
+				printf("%s=%s\n", *envp, *(envp + 1));
+				envp += 2;
+			}
+			return (0);
+		}
+		else
+		{
+			int pid = fork();
+			if (pid == 0)
+			{
+				execvp(full_path, args);
+				perror("Error executing command\n");
+				exit(1);
+			}
+			else
+				wait(NULL);
+		}
+		free(line);
+		free(full_path);
+	}
+	return (0);
 }
-

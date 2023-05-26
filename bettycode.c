@@ -10,9 +10,9 @@
  */
 int main(void)
 {
-	int number_of_items; /* The number of items purchased. */
-	float price_per_item; /* The price of each item. */
-	float total_cost; /* The total cost of the purchase. */
+	int number_of_items;
+	float price_per_item;
+	float total_cost;
 
 	printf("Enter the number of items: ");
 	scanf("%d", &number_of_items);

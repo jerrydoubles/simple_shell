@@ -7,5 +7,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/wait.h>
+
+char *create_array(unsigned int size, char c)
 
 #endif

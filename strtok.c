@@ -1,39 +1,63 @@
 #include "shell.h"
 
+
 static char *lineptr = NULL;
 static size_t n = 0;
 
-ssize_t my_getline(char **lineptr) {
-  ssize_t nread;
+/**
+ * my_getline - my implementation of getline
+ * @lineptr: the line of command
+ *
+ * Return: Number of character read, Otherwise -1.
+ */
+ssize_t my_getline(char **lineptr)
+{
+	ssize_t nread;
 
-  while (1) {
-    nread = read(0, lineptr, n);
+	while (1)
+	{
+		nread = read(0, lineptr, n);
 
-    if (nread == -1) {
-      if (errno == EINTR) {
-        continue;
-      } else {
-        perror("Error reading from stdin\n");
-        return -1;
-      }
-    } else if (nread == 0) {
-      *lineptr = NULL;
-      return 0;
-    } else {
-      break;
-    }
-  }
+		if (nread == -1)
+		{
+			if (errno == EINTR)
+			{
+				continue;
+			}
+			else
+			{
+				perror("Error reading from stdin\n");
+				return (-1);
+			}
+		}
+		else if (nread == 0)
+		{
+			*lineptr = NULL;
+			return (0);
+		}
+		else
+		{
+			break;
+		}
+	}
 
-  for (size_t i = 0; i < nread; i++) {
-    if (lineptr[i] == '\n') {
-      lineptr[i] = '\0';
-      break;
-    }
-  }
+	for (size_t i = 0; i < nread; i++)
+	{
+		if (lineptr[i] == '\n')
+		{
+			lineptr[i] = '\0';
+			break;
+		}
+	}
 
-  return nread;
+	return (nread);
 }
 
+/**
+ * main - strtok function
+ *
+ * Return: Always 0. Otherwise -1 on error.
+ */
 int main(void) {
   char *line = NULL;
   size_t nread;

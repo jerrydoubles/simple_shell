@@ -1,173 +1,140 @@
 #include "shell.h"
 
 /**
- * main_shell_loop - Main shell loop that keeps running until the user exits
- * @info: Pointer to the shell info struct
- * @argv: Array of strings containing command-line arguments
+ * read_user_input - this function reads user input
  *
- * Return: Returns the status of the last executed built-in command
+ * Return: A pointer to the string read.
  */
-int main_shell_loop(info_t *info, char **argv)
+char *read_user_input(void)
 {
-	int builtin_result = 0;
-	char *input_buffer = NULL;
-	size_t buffer_size = 0;
+	char *inp_str = NULL;
+	size_t inp_size = 0;
+	ssize_t inp_len;
+
+	printf("Jeredi> ");
+	inp_len = getline(&inp_str, &inp_size, stdin);
+
+	if (inp_len == -1)
+	{
+		/* Handle end-of-file (Ctrl+D) or error */
+		printf("\n");
+		free(inp_str);
+		return (NULL);
+	}
+
+	/* Remove newline character from input */
+	while (inp_len > 0 && (inp_str[inp_len - 1] == '\n' ||
+				inp_str[inp_len - 1] == ' ' ||
+				inp_str[inp_len - 1] == '\t'))
+	{
+		inp_str[--inp_len] = '\0';
+	}
+	return (inp_str);
+}
+
+/**
+ * tokenize_input - this function tokenize user input
+ * @inp: pointer to the string read
+ * @tokens: an array of pointers to the tokenized string
+ *
+ * Return: Number of arguments parsed.
+ */
+int tokenize_input(char *inp, char *tokens[])
+{
+	char *token;
+	int argc = 0;
+
+	token = strtok(inp, " \t");
+	while (token != NULL)
+	{
+		tokens[argc++] = token;
+		token = strtok(NULL, " \t");
+	}
+
+	return (argc);
+}
+
+/**
+ * execute_cmd - this function executes a command
+ * @cmd: command to execute
+ * @args: array of strings to be passed to the command
+ * @envp: environment variables that will be available to the executed command
+ * @app: pointer to the initial app
+ */
+void execute_cmd(char *cmd, char *args[], char *envp[], char *app __attribute__((unused)))
+{
+	pid_t pid = fork();
+
+	if (pid < 0)
+		perror("Fork error");
+	else if (pid == 0)
+	{
+		/* Child process */
+		if (execve(cmd, args, envp) < 0)
+		{
+			/* Command execution failed */
+			perror("./hsh");
+			exit(EXIT_FAILURE);
+		}
+	}
+	else
+	{
+		/* Parent process */
+		int status;
+
+		waitpid(pid, &status, 0);
+	}
+}
+
+/**
+ * main - Entry point
+ * @ac: argument count
+ * @av: argument vector
+ *
+ * Return: Always 0.
+ */
+int main(int ac __attribute__((unused)), char *av[])
+{
+	char *input;
+	char *tokens[MAX_INPUT_LENGTH];
+	int argc;
+	char *envp[] = {
+		"HOME=/home/user",
+		"PATH=/usr/local/bin:/usr/bin:/bin",
+		NULL
+	};
 
 	while (1)
 	{
-		clear_shell_info(info);
-
-		if (is_interactive(info))
-			print_prompt();
-
-		flush_buffer();
-
-		if (get_user_input(info, &input_buffer, &buffer_size) == -1)
+		input = read_user_input();
+		if (input == NULL)
+		{
+			/* End of file or error */
 			break;
-
-		set_info_from_input(info, argv, input_buffer);
-		builtin_result = find_and_execute_builtin(info);
-
-		if (builtin_result == -1)
-			find_and_execute_external_cmd(info);
-
-		free_shell_info(info, 0);
-		free(input_buffer);
-	}
-
-	write_shell_history(info);
-	free_shell_info(info, 1);
-	return (builtin_result);
-}
-
-/**
- * find_and_execute_builtin - Find and execute a built-in command
- * @info: Pointer to the shell info struct
- *
- * Return: Returns the status of the executed built-in command,
- *         or -1 if the command is not a built-in.
- */
-int find_and_execute_builtin(info_t *info)
-{
-	static builtin_table builtins[] = {
-		{"exit", execute_exit},
-		{"env", execute_env},
-		{"help", execute_help},
-		{"history", execute_history},
-		{"setenv", execute_setenv},
-		{"unsetenv", execute_unsetenv},
-		{"cd", execute_cd},
-		{"alias", execute_alias},
-		{NULL, NULL}
-	};
-
-	for (int i = 0; builtins[i].type; i++)
-	{
-		if (are_strings_equal(info->argv[0], builtins[i].type))
-		{
-			info->line_count++;
-			return (builtins[i].func(info));
 		}
-	}
-	return (-1);
-}
 
-/**
- * find_and_execute_external_cmd - Find and execute an external command
- * @info: Pointer to the shell info struct
- */
-void find_and_execute_external_cmd(info_t *info)
-{
-	char *cmd_path = NULL;
-	int arg_count = 0;
-
-	info->path = info->argv[0];
-	env_var = get_env_var(info, "PATH=");
-
-
-	if (info->linecount_flag == 1)
-	{
-		info->line_count++;
-		info->linecount_flag = 0;
-	}
-
-	for (int i = 0; info->arg[i]; i++)
-	{
-		if (!is_delimiter(info->arg[i], " \t\n"))
-			arg_count++;
-	}
-	if (!arg_count)
-		return;
-
-	cmd_path = find_command_path(info, env_var, info->argv[0]);
-	if (cmd_path)
-	{
-		info->path = cmd_path;
-		fork_and_execute_cmd(info);
-	}
-	else
-	{
-		if ((is_interactive(info) || get_env_var(info, "PATH=") ||
-					info->argv[0][0] == '/') && is_valid_cmd(info, info->argv[0]))
+		if (strlen(input) == 0)
 		{
-			fork_and_execute_cmd(info);
+			free(input);
+			continue;
 		}
-		else if (*(info->arg) != '\n')
+
+		argc = tokenize_input(input, tokens);
+
+		if (argc > 0)
 		{
-			info->status = 127;
-			print_error(info, "Command not found\n");
+			/* Execute the command if no arguments are provided */
+			if (argc == 1)
+				execute_cmd(tokens[0], tokens, envp, av[0]);
+			else
+			{
+				/* Display an error message if arguments are provided */
+				printf("Error: Arguments not allowed\n");
+			}
 		}
-	}
-}
 
-/**
- * fork_and_execute_cmd - Fork and execute a command
- * @info: Pointer to the shell info struct
- */
-void fork_and_execute_cmd(info_t *info)
-{
-	pid_t child_pid = fork();
-
-	if (child_pid == -1)
-	{
-		perror("Error:");
-		return;
+		free(input);
 	}
 
-	if (child_pid == 0)
-	{
-		if (execute_external_cmd(info) == -1)
-		{
-			free_shell_info(info, 1);
-
-			if (errno == EACCES)
-				exit(126);
-			exit(1);
-		}
-	}
-	else
-	{
-		wait_for_child_process(&(info->status));
-		if (child_process_exited_normally(info->status))
-		{
-			info->status = extract_exit_status(info->status);
-			if (info->status == 126)
-				print_error(info, "Permission denied\n");
-		}
-	}
-}
-
-/**
- * main - entry point of the application
- * @argc: number of arguments passed to the program
- * @argv: array of arguments
- *
- * Return: Always 0. Otherwise -1
- */
-int main(int argc, char **argv)
-{
-	info_t shell_info = initialize_shell_info();
-	int result = main_shell_loop(&shell_info, argv);
-
-	return (result);
+	return (0);
 }

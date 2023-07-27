@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 
 #define READ_BUF_SIZE 1024
+#define MAX_INPUT_LENGTH 1024
 
 /**
  * struct passinfo - contains passed in info

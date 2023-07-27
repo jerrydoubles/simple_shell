@@ -130,7 +130,7 @@ int main(int ac __attribute__((unused)), char *av[])
 			else
 			{
 				/* Display an error message if arguments are provided */
-				printf("Error: Arguments not allowed\n");
+				printf("./hsh: No such file or directory\n");
 			}
 		}
 		free(input);

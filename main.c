@@ -2,16 +2,18 @@
 
 /**
  * read_user_input - this function reads user input
+ * @interactive_mode: indicates what mode the program is being run in
  *
  * Return: A pointer to the string read.
  */
-char *read_user_input(void)
+char *read_user_input(int interactive_mode)
 {
 	char *inp_str = NULL;
 	size_t inp_size = 0;
 	ssize_t inp_len;
 
-	printf("Jeredi> ");
+	if (interactive_mode)
+		printf("Jeredi> ");
 	inp_len = getline(&inp_str, &inp_size, stdin);
 
 	if (inp_len == -1)
@@ -61,11 +63,17 @@ int tokenize_input(char *inp, char *tokens[])
  * @envp: environment variables that will be available to the executed command
  * @app: pointer to the initial app
  */
-void execute_cmd(char *cmd, char *args[], char *envp[],
-		char *app __attribute__((unused)))
+void execute_cmd(char *cmd, char *args[], char *envp[], char *app)
 {
-	pid_t pid = fork();
+	pid_t pid;
 
+	if (args[1] != NULL)
+	{
+		fprintf(stderr, "%s: Arguments not allowed", app);
+		return;
+	}
+
+	pid = fork();
 	if (pid < 0)
 		perror("Fork error");
 	else if (pid == 0)
@@ -74,7 +82,7 @@ void execute_cmd(char *cmd, char *args[], char *envp[],
 		if (execve(cmd, args, envp) < 0)
 		{
 			/* Command execution failed */
-			perror("./hsh");
+			perror(app);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -104,10 +112,11 @@ int main(int ac __attribute__((unused)), char *av[])
 		"PATH=/usr/local/bin:/usr/bin:/bin",
 		NULL
 	};
+	int interactive_mode = isatty(STDIN_FILENO);
 
 	while (1)
 	{
-		input = read_user_input();
+		input = read_user_input(interactive_mode);
 		if (input == NULL)
 		{
 			/* End of file or error */
@@ -127,11 +136,6 @@ int main(int ac __attribute__((unused)), char *av[])
 			/* Execute the command if no arguments are provided */
 			if (argc == 1)
 				execute_cmd(tokens[0], tokens, envp, av[0]);
-			else
-			{
-				/* Display an error message if arguments are provided */
-				printf("./hsh: No such file or directory\n");
-			}
 		}
 		free(input);
 	}

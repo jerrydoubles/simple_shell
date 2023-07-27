@@ -61,7 +61,8 @@ int tokenize_input(char *inp, char *tokens[])
  * @envp: environment variables that will be available to the executed command
  * @app: pointer to the initial app
  */
-void execute_cmd(char *cmd, char *args[], char *envp[], char *app __attribute__((unused)))
+void execute_cmd(char *cmd, char *args[], char *envp[],
+		char *app __attribute__((unused)))
 {
 	pid_t pid = fork();
 
@@ -132,9 +133,7 @@ int main(int ac __attribute__((unused)), char *av[])
 				printf("Error: Arguments not allowed\n");
 			}
 		}
-
 		free(input);
 	}
-
 	return (0);
 }

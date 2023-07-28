@@ -8,12 +8,12 @@
  */
 char *read_user_input(int interactive_mode)
 {
-	char *inp_str = NULL;
+	char *inp_str = NULL, *prompt = "Jeredi$ ";
 	size_t inp_size = 0;
 	ssize_t inp_len;
 
 	if (interactive_mode)
-		printf("Jeredi> ");
+		write(STDIN_FILENO, prompt, 8);
 	inp_len = getline(&inp_str, &inp_size, stdin);
 
 	if (inp_len == -1)
@@ -69,7 +69,7 @@ void execute_cmd(char *cmd, char *args[], char *envp[], char *app)
 
 	if (args[1] != NULL)
 	{
-		fprintf(stderr, "%s: Arguments not allowed", app);
+		perror(app);
 		return;
 	}
 
@@ -112,10 +112,11 @@ int main(int ac __attribute__((unused)), char *av[])
 		"PATH=/usr/local/bin:/usr/bin:/bin",
 		NULL
 	};
-	int interactive_mode = isatty(STDIN_FILENO);
+	int interactive_mode = 1;
 
-	while (1)
+	while (1 && interactive_mode)
 	{
+		interactive_mode = isatty(STDIN_FILENO);
 		input = read_user_input(interactive_mode);
 		if (input == NULL)
 		{
@@ -136,6 +137,8 @@ int main(int ac __attribute__((unused)), char *av[])
 			/* Execute the command if no arguments are provided */
 			if (argc == 1)
 				execute_cmd(tokens[0], tokens, envp, av[0]);
+			else
+				perror(av[0]);
 		}
 		free(input);
 	}

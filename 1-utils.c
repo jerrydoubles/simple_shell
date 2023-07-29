@@ -24,3 +24,17 @@ info_t initialize_shell_info(void)
 
 	return (shell_info);
 }
+
+/**
+ * print_error - Prints error messages
+ * @app: name of the shell program
+ * @message: message to print out
+ */
+void print_error(const char *app, const char *message)
+{
+	size_t app_len = strlen(app);
+	size_t message_len = strlen(message);
+
+	write(STDERR_FILENO, app, app_len);
+	write(STDERR_FILENO, message, message_len);
+}

@@ -67,7 +67,10 @@ void execute_cmd(char *cmd, char *args[], char *envp[], char *app)
 {
 	struct stat file_stat;
 	pid_t pid;
+	int argc = 0;
 
+	while (args[argc] != NULL)
+		argc++;
 	pid = fork();
 	if (pid == -1)
 	{
@@ -77,13 +80,18 @@ void execute_cmd(char *cmd, char *args[], char *envp[], char *app)
 	else if (pid == 0)
 	{
 		/* Child process */
-		if (stat(cmd, &file_stat))
+		if (argc > 1)
+		{
+			print_error(app, ": No such file or directory\n");
+			exit(EXIT_FAILURE);
+		}
+		if (stat(cmd, &file_stat) == -1)
 		{
 			perror(app);
 			exit(EXIT_FAILURE);
 		}
 
-		if (execve(cmd, args, envp) < 0)
+		if (execve(cmd, args, envp) < -1)
 		{
 			/* Command execution failed */
 			perror(app);

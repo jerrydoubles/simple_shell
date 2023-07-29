@@ -61,5 +61,6 @@ void find_cmd(info_t *);
 void fork_cmd(info_t *);
 int is_cmd(info_t *, char *);
 info_t initialize_shell_info(void);
+void print_error(const char *app, const char *message);
 
 #endif

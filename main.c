@@ -136,7 +136,7 @@ int main(int ac __attribute__((unused)), char *av[])
 			break;
 		}
 
-		if (strlen(input) == 0)
+		if (_strlen(input) == 0)
 		{
 			free(input);
 			continue;

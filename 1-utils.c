@@ -30,11 +30,30 @@ info_t initialize_shell_info(void)
  * @app: name of the shell program
  * @message: message to print out
  */
-void print_error(const char *app, const char *message)
+void print_error(char *app, char *message)
 {
-	size_t app_len = strlen(app);
-	size_t message_len = strlen(message);
+	size_t app_len = _strlen(app);
+	size_t message_len = _strlen(message);
 
 	write(STDERR_FILENO, app, app_len);
 	write(STDERR_FILENO, message, message_len);
+}
+
+
+/**
+ * _strlen - returns the length of a string
+ * @s: string
+ *
+ * Return: length of the string
+ */
+
+int _strlen(char *s)
+{
+	int i = 0;
+
+	while (*(s + i) != '\0')
+	{
+		i++;
+	}
+	return (i);
 }

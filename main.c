@@ -65,20 +65,24 @@ int tokenize_input(char *inp, char *tokens[])
  */
 void execute_cmd(char *cmd, char *args[], char *envp[], char *app)
 {
+	struct stat file_stat;
 	pid_t pid;
 
-	if (args[1] != NULL)
-	{
-		perror(app);
-		return;
-	}
-
 	pid = fork();
-	if (pid < 0)
+	if (pid == -1)
+	{
 		perror("Fork error");
+		exit(EXIT_FAILURE);
+	}
 	else if (pid == 0)
 	{
 		/* Child process */
+		if (stat(cmd, &file_stat))
+		{
+			perror(app);
+			exit(EXIT_FAILURE);
+		}
+
 		if (execve(cmd, args, envp) < 0)
 		{
 			/* Command execution failed */
@@ -135,10 +139,7 @@ int main(int ac __attribute__((unused)), char *av[])
 		if (argc > 0)
 		{
 			/* Execute the command if no arguments are provided */
-			if (argc == 1)
-				execute_cmd(tokens[0], tokens, envp, av[0]);
-			else
-				perror(av[0]);
+			execute_cmd(tokens[0], tokens, envp, av[0]);
 		}
 		free(input);
 	}
